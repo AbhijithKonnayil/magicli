@@ -6,9 +6,7 @@ class Utils {
   static const libFolder = 'del';
   static Future<bool> isDartProjectRoot() async {
     String pwd = await getPwd();
-    File pubspecFile = File("$pwd/pubspec.yaml");
-    print(pubspecFile);
-    if (pubspecFile.existsSync()) {
+    if (doesFolderExist("$pwd/pubspec.yaml")) {
       print("Flutter root");
       return true;
     } else {
@@ -19,8 +17,7 @@ class Utils {
 
   static Future<bool> isLibFolderPresent() async {
     String pwd = await getPwd();
-    Directory libDir = Directory("$pwd/$libFolder");
-    if (libDir.existsSync()) {
+    if (doesFolderExist("$pwd/$libFolder")) {
       print("lib exist");
       return true;
     }
@@ -28,7 +25,11 @@ class Utils {
     return false;
   }
 
-  static getPwd() async {
+  static bool doesFolderExist(String path) {
+    return Directory(path).existsSync();
+  }
+
+  static Future<String> getPwd() async {
     ProcessResult result = await Process.run('pwd', []);
     return result.stdout.trim();
   }
