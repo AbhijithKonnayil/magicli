@@ -1,7 +1,6 @@
-import 'dart:io';
-
 import 'package:args/command_runner.dart';
 import 'package:magicli/extensions/string.dart';
+import 'package:magicli/utils/bloc_nameing_utils.dart';
 import 'package:magicli/utils/utils.dart';
 
 class AddStateCommand extends Command {
@@ -25,18 +24,11 @@ class AddStateCommand extends Command {
     String blocPath = "$pwd/del/$bloc";
     if (Utils.doesFolderExist(blocPath)) {
       print("exist");
-      File stateFile = File("$blocPath/bloc/${bloc}_state.dart");
-      if (stateFile.existsSync()) {
-        IOSink sink = stateFile.openWrite(mode: FileMode.append);
-        try {
-          String code =
-              "class ${name.toProperCase()}State extends ${bloc.toProperCase()}State{}";
-          sink.writeln(code);
-        } finally {
-          await sink.flush();
-          await sink.close();
-        }
-        return;
+      String stateFilePath = "$blocPath/bloc/${bloc}_state.dart";
+      String code = BlocNaming(bloc).getStateClassDefinition(name);
+      "class ${name.toProperCase()}State extends ${bloc.toProperCase()}State{}";
+      await Utils.appendToFile(stateFilePath, code);
+      /*
         List<String> lines = await stateFile.readAsLines();
         List<String> processedLines = [];
         for (String line in lines) {
@@ -49,7 +41,7 @@ class AddStateCommand extends Command {
         stateFile.writeAsStringSync(processedLines.join('\n'));
       } else {
         print("File dont exist");
-      }
+      } */
     }
   }
 }

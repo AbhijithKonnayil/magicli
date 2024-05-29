@@ -1,9 +1,9 @@
 import 'dart:io';
 
 import 'package:args/command_runner.dart';
-import 'package:magicli/command/add_state.dart';
 import 'package:magicli/content/bloc.dart';
 import 'package:magicli/extensions/string.dart';
+import 'package:magicli/utils/bloc_nameing_utils.dart';
 import 'package:magicli/utils/color_print.dart';
 import 'package:magicli/utils/utils.dart';
 import 'package:path/path.dart' as path;
@@ -44,18 +44,15 @@ class AddFeatureCommand extends Command {
     }
     Directory blocDir = Directory(path.join(directory.path, "bloc"))
       ..createSync();
+
+    BlocNaming blocNaming = BlocNaming(blocName);
     final snakeCaseBlocName = blocName.replaceAll(' ', '').toLowerCase();
-    final blocProperCase = snakeCaseBlocName.toProperCase();
-    //class names
-    final blocClassName = '${blocProperCase}Bloc';
-    final stateClassName = '${blocProperCase}State';
-    final eventClassName = '${blocProperCase}Event';
-    final viewClassName = '${blocProperCase}View';
+
     //file names
-    final blocFileName = '${snakeCaseBlocName}_bloc.dart';
-    final eventFileName = '${snakeCaseBlocName}_event.dart';
-    final stateFileName = '${snakeCaseBlocName}_state.dart';
-    final viewFileName = '${snakeCaseBlocName}_view.dart';
+    final blocFileName = blocNaming.blocFileName;
+    final eventFileName = blocNaming.eventFileName;
+    final stateFileName = blocNaming.stateFileName;
+    final viewFileName = blocNaming.viewFileName;
 
     final blocFile = Utils.createFile(blocDir, blocFileName);
     final eventFile = Utils.createFile(blocDir, eventFileName);
@@ -65,17 +62,23 @@ class AddFeatureCommand extends Command {
       "eventFileName": eventFileName,
       "stateFileName": stateFileName,
       'blocFileName': blocFileName,
-      "blocClassName": blocClassName,
-      "eventClassName": eventClassName,
-      "stateClassName": stateClassName,
-      "viewClassName": viewClassName,
+      "blocClassName": blocNaming.blocClassName,
+      "eventClassName": blocNaming.baseEventClassName,
+      "stateClassName": blocNaming.baseStateClassName,
+      "viewClassName": blocNaming.viewClassName,
+      "stateInitialClassName": blocNaming.stateInitialClassName,
+      "defaultEventClassName": blocNaming.defaultEventClassName,
+      "defaultEventHandler": blocNaming.getEventHandlerNameFromEvent("Default"),
+      "defaultEventDefinition": blocNaming.getEventHandlerDefinition("Default")
     };
-    blocFile.writeAsStringSync(updateTemplate(BLOC_CONTENT, templateKeyValues));
-    eventFile
-        .writeAsStringSync(updateTemplate(EVENT_CONTENT, templateKeyValues));
-    stateFile
-        .writeAsStringSync(updateTemplate(STATE_CONTENT, templateKeyValues));
-    viewFile.writeAsStringSync(updateTemplate(VIEW_CONTENT, templateKeyValues));
+    Utils.writeToFile(
+        blocFile, updateTemplate(BLOC_CONTENT, templateKeyValues));
+    Utils.writeToFile(
+        eventFile, updateTemplate(EVENT_CONTENT, templateKeyValues));
+    Utils.writeToFile(
+        stateFile, updateTemplate(STATE_CONTENT, templateKeyValues));
+    Utils.writeToFile(
+        viewFile, updateTemplate(VIEW_CONTENT, templateKeyValues));
     Print.success('BLoC files generated successfully in $directory');
   }
 }

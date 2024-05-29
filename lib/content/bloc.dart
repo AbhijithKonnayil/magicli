@@ -1,28 +1,40 @@
 const BLOC_CONTENT = """
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '{{eventFileName}}';
-import '{{stateFileName}}';
+import 'package:meta/meta.dart';
+
+part '{{eventFileName}}';
+part '{{stateFileName}}';
 
 class {{blocClassName}} extends Bloc<{{eventClassName}}, {{stateClassName}}> {
-  {{blocClassName}}();
+  {{blocClassName}}():super({{stateInitialClassName}}()){
+    on<{{eventClassName}}>({{defaultEventHandler}});
+  }
+
+ {{defaultEventDefinition}}
 }
 """;
 
 const EVENT_CONTENT = """
-import 'package:equatable/equatable.dart';
+part of '{{blocFileName}}';
 
-abstract class {{eventClassName}} extends Equatable {}
+@immutable
+sealed class {{eventClassName}} {}
+final class {{defaultEventClassName}} extends {{eventClassName}} {}
 """;
 
 const STATE_CONTENT = """
-import 'package:equatable/equatable.dart';
+part of '{{blocFileName}}';
 
-abstract class {{stateClassName}} extends Equatable {}
+@immutable
+sealed class {{stateClassName}} {}
+
+final class {{stateInitialClassName}} extends {{stateClassName}} {}
 """;
 
 const VIEW_CONTENT = """
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '{{blocFileName}}';
+import 'bloc/{{blocFileName}}';
 
 class {{viewClassName}} extends StatelessWidget {
   const {{viewClassName}}({super.key});

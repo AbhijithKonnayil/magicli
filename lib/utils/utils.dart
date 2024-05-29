@@ -1,12 +1,14 @@
 import 'dart:io';
 
+import 'package:magicli/utils/color_print.dart';
 import 'package:path/path.dart' as path;
 
 class Utils {
   static const libFolder = 'del';
   static Future<bool> isDartProjectRoot() async {
     String pwd = await getPwd();
-    if (doesFolderExist("$pwd/pubspec.yaml")) {
+    print(pwd);
+    if (doesFileExist("$pwd/pubspec.yaml")) {
       print("Flutter root");
       return true;
     } else {
@@ -29,6 +31,10 @@ class Utils {
     return Directory(path).existsSync();
   }
 
+  static bool doesFileExist(String path) {
+    return File(path).existsSync();
+  }
+
   static Future<String> getPwd() async {
     ProcessResult result = await Process.run('pwd', []);
     return result.stdout.trim();
@@ -44,6 +50,62 @@ class Utils {
 
   static File createFile(Directory directory, String fileName) {
     return File(path.join(directory.path, fileName))..createSync();
+  }
+
+  static void writeToFile(File file, String content) {
+    file.writeAsStringSync(content);
+  }
+
+  static Future<void> appendToFile(String path, String content) async {
+    File file = File(path);
+    if (!Utils.doesFileExist(path)) {
+      Print.error("File doesnt Exist");
+    }
+    IOSink sink = file.openWrite(mode: FileMode.append);
+    try {
+      sink.writeln(content);
+    } finally {
+      await sink.flush();
+      await sink.close();
+    }
+  }
+
+  static insertContentInFile(String filePath, String codeBlock) {
+    File file = File(filePath);
+    final fileContent = file.readAsStringSync();
+    final lastIndex = fileContent.lastIndexOf('}');
+    if (lastIndex != -1) {
+      final updatedContent = """${fileContent.substring(0, lastIndex)} 
+          $codeBlock
+          ${fileContent.substring(lastIndex)}""";
+      file.writeAsStringSync(updatedContent);
+      print('Function inserted successfully.');
+    }
+  }
+
+  static insertConstructorFile(String filePath, String codeBlock) {
+    File file = File(filePath);
+    print(filePath);
+    final fileContent = file.readAsStringSync();
+    final regExp = RegExp(
+        r'TestBloc\s*\(([^)]*)\)\s*:\s*super\(\s*TestInitialState\s*\(\s*\)\s*\)\s*\{([^}]*)\}');
+
+    final match = regExp.firstMatch(fileContent);
+    print(match);
+    if (match != null) {
+      final constructorBodyStart =
+          match.start + match.group(0)!.indexOf('{') + 1;
+      final constructorBodyEnd = match.end - 1;
+
+      final updatedContent =
+          """${fileContent.substring(0, constructorBodyStart)} 
+           on<TestEvent>(_handleDefaultEvent);
+          ${fileContent.substring(constructorBodyStart, constructorBodyEnd)}
+          ${fileContent.substring(constructorBodyEnd)}
+          """;
+      file.writeAsStringSync(updatedContent);
+      print('Function inserted successfully.');
+    }
   }
 }
 
